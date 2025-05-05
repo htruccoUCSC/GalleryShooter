@@ -70,6 +70,11 @@ class Wave {
         }
     }
 
+    destroy() {
+        this.enemies.forEach(enemy => enemy.destroy());
+        this.enemies = [];
+    }
+
     update() {
         if (this.enemies) {
             this.enemies.forEach(enemy => enemy.update());

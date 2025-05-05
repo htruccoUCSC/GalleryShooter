@@ -86,11 +86,11 @@ class Enemy extends Phaser.GameObjects.PathFollower {
             volume: 0.25 
         });
         this.scene.add.sprite(this.x, this.y, this.destructionAnim[0]).setScale(0.25).play(this.destructionAnim);
-        this.visible = false;
-        this.damageSprite.visible = false;
-        this.active = false;
-        this.damageSprite.active = false;
-        this.stopFollow();
+        if (this.damageSprite) {
+            this.damageSprite.visible = false;
+            this.damageSprite.active = false;
+        }
+        super.destroy();
     }
 
     update () {
