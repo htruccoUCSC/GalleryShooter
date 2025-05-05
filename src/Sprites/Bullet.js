@@ -9,7 +9,7 @@ class Bullet extends Phaser.GameObjects.Sprite {
     update() {
         if (this.active) {
             this.y -= this.speed;
-            if (this.y < -(this.displayHeight/2)) {
+            if (this.y < -(this.displayHeight/2) || this.y > (game.config.height + this.displayHeight)) {
                 this.makeInactive();
             }
         }

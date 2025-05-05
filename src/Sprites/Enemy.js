@@ -1,5 +1,5 @@
 class Enemy extends Phaser.GameObjects.PathFollower {
-    constructor(scene, path, x, y, texture, frame, score, health, rotation, sound, destructionAnim, damageFrames, depth) {
+    constructor(scene, path, x, y, texture, frame, score, health, rotation, sound, destructionAnim, damageFrames, bulletCount, bulletDelay, bulletSpeed, bulletFrame, depth) {
         super(scene, path, x, y, texture, frame);
         this.score = score;
         this.health = health;
@@ -11,7 +11,33 @@ class Enemy extends Phaser.GameObjects.PathFollower {
         this.damageSprite = null;
         this.depth = depth;
         this.damageFrames = damageFrames;
+        this.bulletCount = bulletCount;
+        this.bulletDelay = bulletDelay;
+        this.bulletDelayCounter = 0;
+        this.bulletSpeed = bulletSpeed;
+        this.bulletFrame = bulletFrame;
+        this.bulletGroup;
+        this.createBulletGroup();
         scene.add.existing(this);
+    }
+
+    createBulletGroup () {
+        this.bulletGroup = this.scene.add.group({
+            active: true,
+            defaultKey: this.texture,
+            maxSize: this.bulletCount,
+            runChildUpdate: true
+        });
+
+        this.bulletGroup.createMultiple({
+            classType: Bullet,
+            active: false,
+            visible: false,
+            key: this.texture,
+            frame: this.bulletFrame,
+            repeat: this.bulletCount - 1
+        });
+        this.bulletGroup.propertyValueSet("speed", -(this.bulletSpeed));
     }
 
     createDamageSprite() {
@@ -65,5 +91,18 @@ class Enemy extends Phaser.GameObjects.PathFollower {
         this.active = false;
         this.damageSprite.active = false;
         this.stopFollow();
+    }
+
+    update () {
+        this.bulletDelayCounter++;
+        if (this.bulletDelayCounter > this.bulletDelay) {
+            let bullet = this.bulletGroup.getFirstDead();
+                if (bullet != null) {
+                    this.bulletDelayCounter = 0;
+                    bullet.makeActive();
+                    bullet.x = this.x;
+                    bullet.y = this.y + (this.displayHeight/2);
+                }
+        }
     }
 }

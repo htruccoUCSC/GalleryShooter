@@ -9,7 +9,8 @@ class MainGame extends Phaser.Scene {
         this.bulletCooldown = 50; 
         this.bulletCooldownCounter = 0;
         
-        this.myScore = 0;       
+        this.myScore = 0;      
+        this.waves = []; 
     }
 
     preload() {
@@ -48,7 +49,7 @@ class MainGame extends Phaser.Scene {
             {texture: "damageOverlayTexture2", frame: null, x: 0, y: 28},
             {texture: "dome", frame: null, x: -1, y: -20}
         ];
-        let alienHealth = 100;
+        let alienHealth = 3;
         let bulletKey = "laser";
         let bulletMaxSize = 30;
         my.sprite.alien = new Player(this, game.config.width/2, game.config.height - 50 , playerTextures, playerOverlays, this.left, this.right, this.playerSpeed, alienHealth, bulletKey, bulletMaxSize, this.bulletSpeed);
@@ -72,6 +73,13 @@ class MainGame extends Phaser.Scene {
             50, 80,
             (game.config.width - 50), 80
         ]);
+
+        const parabolicCurve = new Phaser.Curves.Spline([
+            50, 80,
+            (game.config.width/2), game.config.height - 250,
+            (game.config.width - 50), 80
+        ]);
+
         const greenEnemy = {
             texture: "enemySheet",
             frame: "playerShip1_green.png",
@@ -84,11 +92,40 @@ class MainGame extends Phaser.Scene {
                 "playerShip1_damage1.png",
                 "playerShip1_damage2.png",
                 "playerShip1_damage3.png"
-            ]
+            ],
+            bulletCount: 5,
+            bulletDelay: 320,
+            bulletSpeed: 5,
+            bulletFrame: "laserRed15.png" 
         };
 
-        my.sprite.wave = new Wave (this, 3, sideToSideCurve, greenEnemy, 10);
+        const purpleEnemy = {
+            texture: "enemySheet",
+            frame: "playerShip1_blue.png",
+            health: 100,
+            score: 25,
+            rotation: 180,
+            sound: "dadada",
+            destructionAnim: "puff",
+            damageFrames: [
+                "playerShip1_damage1.png",
+                "playerShip1_damage2.png",
+                "playerShip1_damage3.png"
+            ],
+            bulletCount: 5,
+            bulletDelay: 250,
+            bulletSpeed: 5,
+            bulletFrame: "laserRed15.png" 
+        };
+
+        my.sprite.wave = new Wave (this, 3, sideToSideCurve, greenEnemy, 10, 25);
         my.sprite.wave.startWave();
+        this.waves.push(my.sprite.wave);
+        my.sprite.wave2 = new Wave (this, 2, parabolicCurve, purpleEnemy, 8, 100);
+        my.sprite.wave2.startWave();
+        this.waves.push(my.sprite.wave2);
+
+
 
         document.getElementById('description').innerHTML = '<h2>Gallery Shooter</h2><br>A: left // D: right // Space: fire/emit'
 
@@ -114,18 +151,40 @@ class MainGame extends Phaser.Scene {
 
         for (let bullet of my.sprite.alien.bulletGroup.children.entries) {
             if (bullet.active) {
-                for (let enemy of my.sprite.wave.enemies) {
-                    if (enemy.active && this.collides(enemy, bullet)) {
-                        bullet.y = -100;
-                        this.myScore += my.sprite.wave.damage(enemy, 25);
-                        this.updateScore();
-                        break;
+                for (let wave of this.waves) {
+                    for (let enemy of wave.enemies) {
+                        if (enemy.active && this.collides(enemy, bullet)) {
+                            bullet.y = -100;
+                            this.myScore += wave.damage(enemy, 25);
+                            this.updateScore();
+                            break;
+                        }
                     }
                 }
             }
         }
+
+        for (let wave of this.waves) {
+            for (let enemy of wave.enemies) {
+                for (let bullet of enemy.bulletGroup.children.entries) {
+                    if (bullet.active && my.sprite.alien.active && this.collides(my.sprite.alien, bullet)) {
+                        bullet.y = game.config.height + 100;
+                        my.sprite.alien.health--;
+                        const health = my.sprite.alien.health;
+                        if (health < 1) {
+                            my.sprite.alien.destroy();
+                        } else if (health < 2) {
+                            my.sprite.alien.showOverlay("damageOverlayTexture2");
+                        } else if (health < 3) {
+                            my.sprite.alien.showOverlay("damageOverlayTexture1");
+                        }
+                        break;
+                    } 
+                }
+            }
+        }
         my.sprite.alien.update();
-        my.sprite.wave.update();
+        this.waves.forEach(w => w.update());
     }
 
     collides(a, b) { 

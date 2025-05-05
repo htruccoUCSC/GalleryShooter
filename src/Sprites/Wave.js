@@ -1,11 +1,10 @@
 class Wave {
-    constructor(scene, enemyCount, path, enemyInfo, speed) {
+    constructor(scene, enemyCount, path, enemyInfo, speed, depth) {
         this.scene = scene;
         this.enemies = [];
         this.path = path;
         this.enemyCount = enemyCount;
         this.speed = speed;
-
         for (let i = 0; i < this.enemyCount; i++) {
             let enemy = new Enemy(
                 this.scene,
@@ -20,7 +19,11 @@ class Wave {
                 enemyInfo.sound,
                 enemyInfo.destructionAnim,
                 enemyInfo.damageFrames,
-                (25 * (i+1))
+                enemyInfo.bulletCount,
+                enemyInfo.bulletDelay,
+                enemyInfo.bulletSpeed,
+                enemyInfo.bulletFrame,
+                (depth * (i+1))
             );
             enemy.number = i;
             this.enemies.push(enemy);
