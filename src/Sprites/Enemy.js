@@ -199,24 +199,37 @@ class Enemy extends Phaser.GameObjects.PathFollower {
   }
 
   destroy() {
-    this.scene.sound.play(this.sound, {
-      volume: 0.25,
-    });
-    this.scene.add
-      .sprite(this.x, this.y, this.destructionAnim[0])
-      .setScale(0.25)
-      .play(this.destructionAnim);
+    if (this.sound) {
+      this.scene.sound.play(this.sound, {
+        volume: 0.25,
+      });
+    }
+    
+    if (this.destructionAnim && this.destructionAnim[0]) {
+      this.scene.add
+        .sprite(this.x, this.y, this.destructionAnim[0])
+        .setScale(0.25)
+        .play(this.destructionAnim);
+    }
+
     if (this.damageSprite) {
       this.damageSprite.visible = false;
       this.damageSprite.active = false;
     }
+
     if (this.bulletGroup) {
       this.bulletGroup.destroy(true);
     }
+
     if (this.enemyType === "boss") {
-      this.healthBar.destroy();
-      this.healthBarBg.destroy();
+      if (this.healthBar) {
+        this.healthBar.destroy();
+      }
+      if (this.healthBarBg) {
+        this.healthBarBg.destroy();
+      }
     }
+
     super.destroy();
   }
 

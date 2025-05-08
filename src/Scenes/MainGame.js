@@ -16,6 +16,7 @@ class MainGame extends Phaser.Scene {
     this.currentWave = 1;
     this.selectingBuff = false;
     this.buffHover = 0;
+    this.buffSelectionDelay = false;
     this.uniqueBuffs = new Set();
     this.healthHearts = [];
 
@@ -597,38 +598,41 @@ class MainGame extends Phaser.Scene {
         this.currentWave++;
         this.updateWave();
         this.showBuffSelection();
+        this.selectingBuff = true;
         this.gameActive = false;
       }
     } else if (this.selectingBuff) {
-      if (Phaser.Input.Keyboard.JustDown(this.right)) {
-        this.buffHover = 1;
-        my.text.buff1.setColor("white");
-        my.text.buff2.setColor("red");
-      } else if (Phaser.Input.Keyboard.JustDown(this.left)) {
-        this.buffHover = 0;
-        my.text.buff1.setColor("red");
-        my.text.buff2.setColor("white");
-      } else if (Phaser.Input.Keyboard.JustDown(this.space)) {
-        const selectedBuff =
-          this.buffHover === 0 ? this.currentBuffs[0] : this.currentBuffs[1];
-        selectedBuff.apply(my.sprite.alien);
+      if (!this.buffSelectionDelay) {
+        if (Phaser.Input.Keyboard.JustDown(this.right)) {
+          this.buffHover = 1;
+          my.text.buff1.setColor("white");
+          my.text.buff2.setColor("red");
+        } else if (Phaser.Input.Keyboard.JustDown(this.left)) {
+          this.buffHover = 0;
+          my.text.buff1.setColor("red");
+          my.text.buff2.setColor("white");
+        } else if (Phaser.Input.Keyboard.JustDown(this.space)) {
+          const selectedBuff =
+            this.buffHover === 0 ? this.currentBuffs[0] : this.currentBuffs[1];
+          selectedBuff.apply(my.sprite.alien);
 
-        if (!selectedBuff.repeatable) {
-          this.uniqueBuffs.add(selectedBuff.name);
+          if (!selectedBuff.repeatable) {
+            this.uniqueBuffs.add(selectedBuff.name);
+          }
+
+          my.text.buffTitle.destroy();
+          my.text.buff1.destroy();
+          my.text.buff2.destroy();
+          my.text.buffDesc1.destroy();
+          my.text.buffDesc2.destroy();
+          my.text.currentStats.destroy();
+
+          this.selectingBuff = false;
+          this.makeWave();
+          my.sprite.wave.startWave();
+          this.updateHealth();
+          this.gameActive = true;
         }
-
-        my.text.buffTitle.destroy();
-        my.text.buff1.destroy();
-        my.text.buff2.destroy();
-        my.text.buffDesc1.destroy();
-        my.text.buffDesc2.destroy();
-        my.text.currentStats.destroy();
-
-        this.selectingBuff = false;
-        this.makeWave();
-        my.sprite.wave.startWave();
-        this.updateHealth();
-        this.gameActive = true;
       }
     } else if (this.gameOver) {
       my.sprite.alien.destroy();
@@ -731,6 +735,7 @@ class MainGame extends Phaser.Scene {
   showBuffSelection() {
     let my = this.my;
     this.selectRandomBuffs();
+    this.buffSelectionDelay = true;
 
     this.time.delayedCall(500, () => {
       my.text.buffTitle = this.add
@@ -814,7 +819,7 @@ class MainGame extends Phaser.Scene {
 
       my.text.buff1.setColor("red");
       this.buffHover = 0;
-      this.selectingBuff = true;
+      this.buffSelectionDelay = false;
     });
   }
 
